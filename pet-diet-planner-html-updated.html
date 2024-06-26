@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planificador de Dieta para Mascotas</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .card {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .card-header {
+            background-color: #3498db;
+            color: #fff;
+            padding: 10px 15px;
+            font-weight: bold;
+        }
+        .card-content {
+            padding: 15px;
+        }
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #2ecc71;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #27ae60;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 15px;
+        }
+        .food-description {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Planificador de Dieta para Mascotas</h1>
+    
+    <div class="card">
+        <div class="card-header">Información de la Mascota</div>
+        <div class="card-content">
+            <select id="petType">
+                <option value="dog">Perro</option>
+                <option value="cat">Gato</option>
+            </select>
+            <input type="text" id="petName" placeholder="Nombre">
+            <input type="number" id="petWeight" placeholder="Peso (kg)">
+            <input type="text" id="petAge" placeholder="Edad">
+            <select id="activityLevel">
+                <option value="low">Baja</option>
+                <option value="normal" selected>Normal</option>
+                <option value="high">Alta</option>
+            </select>
+            <input type="text" id="healthIssues" placeholder="Problemas de salud">
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Tipo de Dieta</div>
+        <div class="card-content">
+            <select id="dietType">
+                <option value="ciro">Dieta Ciro</option>
+                <option value="barf">BARF Básico</option>
+            </select>
+        </div>
+    </div>
+
+    <button onclick="calculateDiet()">Calcular Dieta</button>
+
+    <div id="results" style="display: none;">
+        <div class="card">
+            <div class="card-header">Cantidades Diarias</div>
+            <div class="card-content">
+                <p><strong>Cantidad total diaria: <span id="dailyTotal"></span></strong></p>
+                <ul id="dailyItems"></ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">Cantidades Semanales</div>
+            <div class="card-content">
+                <p><strong>Cantidad total semanal: <span id="weeklyTotal"></span></strong></p>
+                <ul id="weeklyItems"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const foodDescriptions = {
+            'Carne magra': 'Pollo, pavo, res magra, cordero magro.',
+            'Carne muscular': 'Pollo, pavo, res, cordero, conejo.',
+            'Hígado': 'Hígado de pollo, res o cordero. Rico en vitaminas y minerales.',
+            'Órganos': 'Hígado, riñón, corazón. No más del 10% de la dieta.',
+            'Huesos carnosos': 'Cuellos de pollo, alas de pollo, carcasas. Siempre crudos.',
+            'Verduras': 'Calabaza, zanahoria, brócoli, espinacas. Siempre cocidas o trituradas.',
+            'Verduras y frutas': 'Calabaza, zanahoria, manzana, arándanos. Trituradas o cocidas.',
+            'Suplementos': 'Aceite de pescado, cáscara de huevo molida, levadura nutricional.'
+        };
+
+        function calculateDiet() {
+            const petType = document.getElementById('petType').value;
+            const weight = parseFloat(document.getElementById('petWeight').value);
+            const activityLevel = document.getElementById('activityLevel').value;
+            const dietType = document.getElementById('dietType').value;
+
+            let dailyAmount = petType === 'dog' ? weight * 20 : weight * 25; // Ajuste para gatos
+            if (activityLevel === 'high') dailyAmount *= 1.2;
+            if (activityLevel === 'low') dailyAmount *= 0.8;
+
+            const weeklyAmount = dailyAmount * 7;
+
+            let proportions;
+            if (dietType === 'ciro') {
+                proportions = [
+                    { name: 'Carne magra', percentage: 0.4 },
+                    { name: 'Hígado', percentage: 0.05 },
+                    { name: 'Verduras', percentage: 0.1 },
+                    { name: 'Huesos carnosos', percentage: 0.4 },
+                    { name: 'Suplementos', percentage: 0.05 }
+                ];
+            } else { // BARF
+                proportions = [
+                    { name: 'Carne muscular', percentage: 0.7 },
+                    { name: 'Órganos', percentage: 0.1 },
+                    { name: 'Huesos carnosos', percentage: 0.1 },
+                    { name: 'Verduras y frutas', percentage: 0.07 },
+                    { name: 'Suplementos', percentage: 0.03 }
+                ];
+            }
+
+            const dailyItems = proportions.map(item => ({
+                name: item.name,
+                amount: Math.round(dailyAmount * item.percentage)
+            }));
+
+            const weeklyItems = proportions.map(item => ({
+                name: item.name,
+                amount: Math.round(weeklyAmount * item.percentage)
+            }));
+
+            document.getElementById('dailyTotal').textContent = `${Math.round(dailyAmount)}g`;
+            document.getElementById('weeklyTotal').textContent = `${Math.round(weeklyAmount)}g`;
+
+            const dailyList = document.getElementById('dailyItems');
+            const weeklyList = document.getElementById('weeklyItems');
+
+            dailyList.innerHTML = '';
+            weeklyList.innerHTML = '';
+
+            dailyItems.forEach(item => {
+                dailyList.innerHTML += `
+                    <li>
+                        <strong>${item.name}: ${item.amount}g</strong>
+                        <div class="food-description">${foodDescriptions[item.name] || ''}</div>
+                    </li>`;
+            });
+
+            weeklyItems.forEach(item => {
+                weeklyList.innerHTML += `
+                    <li>
+                        <strong>${item.name}: ${item.amount}g</strong>
+                        <div class="food-description">${foodDescriptions[item.name] || ''}</div>
+                    </li>`;
+            });
+
+            document.getElementById('results').style.display = 'block';
+        }
+    </script>
+</body>
+</html>
